@@ -5,15 +5,21 @@ import bcryptjs from "bcryptjs";
 export const sendEmail = async ({ email, emailType, userId }: any) => {
   try {
     const hashedToken = await bcryptjs.hash(userId.toString(), 10);
+    console.log("emailType", emailType);
+    console.log("hashedToken", hashedToken);
     if (emailType === "VERIFY") {
       await User.findByIdAndUpdate(userId, {
-        verifiedToken: hashedToken,
-        verifiedTokenExpiry: Date.now() + 1,
+        $set: {
+          verifiedToken: hashedToken,
+          verifiedTokenExpiry: Date.now() + 1,
+        },
       });
     } else if (emailType === "RESET") {
       await User.findByIdAndUpdate(userId, {
-        forgotPasswordToken: hashedToken,
-        forgotPasswordTokenExpiry: Date.now() + 1,
+        $set: {
+          forgotPasswordToken: hashedToken,
+          forgotPasswordTokenExpiry: Date.now() + 1,
+        },
       });
     }
     const transport = nodemailer.createTransport({
@@ -24,8 +30,8 @@ export const sendEmail = async ({ email, emailType, userId }: any) => {
         pass: "5b6c3611ebfded",
       },
     });
-    const verifyEmailLink = `${process.env.DOMAIN}verifyemail?token=${hashedToken}`;
-    const resetEmailLink = `${process.env.DOMAIN}verifyemail?token=${hashedToken}`;
+    const verifyEmailLink = `${process.env.DOMAIN}/verifyemail?token=${hashedToken}`;
+    const resetEmailLink = `${process.env.DOMAIN}/email?token=${hashedToken}`;
     const mailOptions = {
       from: "yashvanty@gmail.com",
       to: email,
